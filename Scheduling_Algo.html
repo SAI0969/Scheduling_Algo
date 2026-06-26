@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPU Scheduling Algorithms & Simulator</title>
+
+<style>
+:root {
+    --bg-main: #0f172a;
+    --bg-body: #f8fafc;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --primary: #4f46e5;
+    --primary-hover: #6366f1;
+    --primary-light: #eef2ff;
+    --success: #10b981;
+    --success-bg: #ecfdf5;
+    --success-text: #065f46;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+    --danger-text: #991b1b;
+    --warning: #f59e0b;
+    --warning-bg: #fffbeb;
+    --warning-text: #92400e;
+    --border-color: #e2e8f0;
+    --card-bg: #ffffff;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-body);
+    color: var(--text-main);
+    line-height:1.6;
+}
+
+/* NAVBAR */
+nav{
+    position:sticky;
+    top:0;
+    z-index:1000;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding:18px;
+}
+
+nav ul{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:30px;
+    list-style:none;
+}
+
+nav a{
+    color:#94a3b8;
+    text-decoration:none;
+    font-weight:500;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+}
+
+nav a:hover{
+    color: white;
+}
+
+/* HERO */
+.hero{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    padding:80px 40px 40px 40px;
+    background: linear-gradient(180deg, #edf2f7 0%, var(--bg-body) 100%);
+}
+
+.hero h1{
+    font-size:3.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(to right, #1e3a8a, #4f46e5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* SECTION */
+section{
+    padding:60px 12%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+h2{
+    text-align:center;
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom:40px;
+    color: var(--bg-main);
+    letter-spacing: -0.02em;
+}
+
+h3 {
+    margin-bottom: 10px;
+}
+
+h4 {
+    margin: 25px 0 12px 0;
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.card-container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:30px;
+}
+
+.card{
+    background: var(--card-bg);
+    padding:30px;
+    border-radius:16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 25px;
+}
+
+.card:hover{
+    transform:translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: #cbd5e1;
+}
+
+.card h3{
+    color: var(--primary);
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom:15px;
+    padding-bottom: 10px;
+}
+
+.card p{
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+b {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* INTERACTIVE DROPDOWNS */
+details {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin: 15px 0;
+    padding: 16px;
+    transition: all 0.25s ease;
+}
+
+details[open] {
+    border-color: var(--primary);
+    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.05);
+}
+
+summary {
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+}
+
+summary::-webkit-details-marker {
+    display: none;
+}
+
+summary::after {
+    content: "➔";
+    font-size: 0.8rem;
+    color: var(--primary);
+    background: var(--primary-light);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+details[open] summary::after {
+    transform: rotate(90deg);
+    color: var(--danger-text);
+    background: var(--danger-bg);
+}
+
+.dropdown-content {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* BOX STYLES */
+.info-box {
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    margin: 20px 0;
+}
+
+.info-box.steps {
+    border-left: 4px solid var(--warning);
+    background-color: #fffbeb;
+    color: var(--warning-text);
+}
+.info-box.steps b { color: var(--warning-text); }
+
+.info-box.note-red {
+    border-left: 4px solid var(--danger);
+    background-color: var(--danger-bg);
+    color: var(--danger-text);
+}
+.info-box.note-red b { color: var(--danger-text); }
+
+.info-box.note-green {
+    border-left: 4px solid var(--success);
+    background-color: var(--success-bg);
+    color: var(--success-text);
+}
+.info-box.note-green b { color: var(--success-text); }
+
+/* TABLES */
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin: 24px 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+}
+
+th{
+    background:#f1f5f9;
+    color:#475569;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+th,td{
+    padding:14px 16px;
+    text-align:center;
+    font-size: 0.95rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:nth-child(even){
+    background:#f8fafc;
+}
+
+/* GANTT CHART TIMELINE */
+.gantt-table {
+    margin-bottom: 0px;
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+    box-shadow: none;
+    table-layout: fixed;
+}
+.gantt-table th {
+    background: #1e293b;
+    color: #f8fafc;
+    padding: 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: 1px solid #334155;
+    letter-spacing: 0.05em;
+    text-align: center;
+}
+.gantt-timeline {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.85rem;
+    background: #edf2f7;
+    border-radius: 0 0 8px 8px;
+    border: 1px solid var(--border-color);
+    border-top: none;
+    margin-bottom: 25px;
+}
+
+/* SIMULATOR & INTERACTIVE COMPONENTS */
+.form-group {
+    margin-bottom: 15px;
+}
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #334155;
+    font-size: 0.9rem;
+}
+input, select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+input:focus, select:focus {
+    border-color: var(--primary);
+}
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-secondary {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+.btn-secondary:hover { background: #e0e7ff; }
+.btn-danger {
+    background: var(--danger-bg);
+    color: var(--danger-text);
+}
+.btn-danger:hover { background: #fca5a5; }
+
+.flex-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+/* LIVE GANTT GENERATOR VISUALS */
+.live-gantt-wrapper {
+    margin: 20px 0;
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    overflow-x: auto;
+}
+.live-gantt {
+    display: flex;
+    min-width: 100%;
+}
+.gantt-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    padding: 15px 5px;
+    border-right: 2px solid #0f172a;
+    position: relative;
+    text-align: center;
+    min-height: 60px;
+}
+.gantt-block:last-child {
+    border-right: none;
+}
+.gantt-block .time-start {
+    position: absolute;
+    left: 2px;
+    bottom: -22px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+.gantt-block .time-end {
+    position: absolute;
+    right: 2px;
+    bottom: -22px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* FOOTER */
+footer{
+    text-align:center;
+    background: var(--bg-main);
+    color:#94a3b8;
+    padding:40px;
+    margin-top: 60px;
+    font-size: 0.9rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+/* QUEUE VISUAL IMPLEMENTATIONS */
+.queue-box {
+    background:#ffffff;
+    border:2px solid var(--primary);
+    border-radius:12px;
+    padding:16px;
+    text-align:center;
+    font-weight:700;
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    margin:15px 0;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+}
+
+.mlq-container {
+    display:grid;
+    gap:15px;
+    margin:20px 0;
+}
+.mlq-row {
+    padding:16px;
+    border-radius:10px;
+    font-size: 0.95rem;
+}
+
+.cpu-order {
+    text-align:center;
+    font-weight:700;
+    line-height:2;
+    background:#ffffff;
+    padding:20px;
+    border-radius:12px;
+    border:1px solid var(--border-color);
+    margin-bottom:20px;
+    color: #334155;
+}
+
+/* ANIMATION */
+.hidden{
+    opacity:0;
+    transform:translateY(20px);
+    transition:all .6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+@media(max-width:768px){
+    .hero h1{
+        font-size:2.4rem;
+    }
+    section{
+        padding:40px 6%;
+    }
+    table{
+        display:block;
+        overflow-x:auto;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+<ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#keyterms">Key Terms</a></li>
+    <li><a href="#criteria">Criteria</a></li>
+    <li><a href="#algorithms">Algorithms</a></li>
+    <li><a href="#simulator">Interactive Simulator</a></li>
+    <li><a href="#mistakes">Common Mistakes</a></li>
+    <li><a href="#generator">Question Generator</a></li>
+</ul>
+</nav>
+
+<section class="hero">
+    <div>
+        <h1>CPU Scheduling Algorithms</h1>
+    </div>
+</section>
+
+<section id="intro" class="hidden">
+    <h2>Introduction</h2>
+    <div class="card">
+        <h3>What is CPU Scheduling?</h3>
+        <p>Whenever the <b>CPU becomes idle, the operating system</b> must <b>select one of the processes in the ready queue to be executed</b>. The <b>selection process</b> is carried out by the <b>short-term scheduler, or CPU scheduler</b>.</p>
+        <br>
+        <h3>Why Scheduling is needed</h3>
+        <p>It is desirable to <b>maximize CPU utilization and throughput and to minimize turnaround time, waiting time, and response time.</b></p>
+        <br>
+        <h3>Objectives of Scheduling</h3>
+        <p><b>High CPU utilization, low waiting time, low turnaround time, good response time and fairness.</b></p>
+    </div>
+</section>
+
+<section id="keyterms">
+    <h2>Key Terms</h2>
+    <div class="card-container">
+        <div class="card">
+            <h3>Arrival Time (AT)</h3> 
+            <p>It is the <b>time at which a process enters the ready queue</b> and becomes <b>available for execution by the CPU.</b></p>
+        </div>
+
+        <div class="card">
+            <h3>Burst Time (BT)</h3>
+            <p>It is the <b>total amount of CPU time required by a process</b> to <b>complete its execution.</b></p>
+        </div>
+
+        <div class="card">
+            <h3>Completion Time (CT)</h3>
+            <p>It is the <b>time at which a process finishes its execution completely.</b></p>
+        </div>
+
+        <div class="card">
+            <h3>TurnAround Time (TAT)</h3>
+            <p>It is the <b>total time taken by a process from its arrival in the ready queue until its completion of execution.</b><br><br>
+            <b>Formula:<br>TAT = CT - AT</b></p>
+        </div>
+
+        <div class="card">
+            <h3>Waiting Time (WT)</h3>
+            <p>It is the <b>total time a process spends waiting in the ready queue before getting CPU execution.</b><br><br>
+            <b>Formula:<br>WT = TAT - BT <br></b>or<b><br> WT = CT - AT - BT</b></p>
+        </div>
+
+        <div class="card">
+            <h3>Response Time (RT)</h3>
+            <p>It is the <b>time between the arrival of a process and the first time it gets CPU execution.</b><br><br>
+            <b>Formula:<br>RT = First CPU Allocation Time - AT</b></p>
+        </div>
+    </div>
+    <h4 style="text-align: center; margin-top: 30px; color: var(--text-muted); font-weight: 400;">Note: Most of the time AT, BT, CT, will be mentioned in the question.</h4>
+</section>
+
+<section id="criteria" class="hidden">
+    <h2>Scheduling Criteria</h2>
+    <div class="card-container">
+        <div class="card">
+            <h3>Throughput</h3>
+            <p><b>Number of processes completed per unit time.</b></p>
+        </div>
+
+        <div class="card">
+            <h3>Turnaround Time</h3>
+            <p><b>Total time from submission to completion.</b></p>
+        </div>
+
+        <div class="card">
+            <h3>Waiting Time</h3>
+            <p><b>Time spent waiting in ready queue.</b></p>
+        </div>
+
+        <div class="card">
+            <h3>Response Time</h3>
+            <p><b>Time until first response is produced.</b></p>
+        </div>
+
+        <div class="card">
+            <h3>CPU Utilisation</h3>
+            <p><b>Keep CPU busy as much as possible.</b></p>
+        </div>
+    </div>
+</section>
+
+<section id="algorithms" class="hidden">
+    <h2>Scheduling Algorithms</h2>
+     
+    <div class="card">
+        <h3>First Come First Serve (FCFS)</h3>
+        <details>
+            <summary>Click to view FCFS</summary>
+            <div class="dropdown-content">
+                <p>
+                    <b>It is non-preemptive.</b><br><br>
+                    By far the <b>simplest CPU scheduling algorithm.</b> The <b>process that requests the CPU first will be allocated the CPU first.</b><br><br>
+                    The implementation of the FCFS policy is easily <b>managed by a FIFO queue.</b><br><br>
+                    The job which comes first in the ready queue will get the CPU first. FCFS scheduling algorithm simply <b>schedules</b> the jobs <b>according to their arrival time.</b>
+                </p>
+                <br>
+                <b style="color: var(--success);">ADVANTAGES:</b> Easy to implement.<br>
+                <b style="color: var(--danger);">DISADVANTAGES:</b> Average waiting time under the FCFS policy is often quite long.
+            </div>
+        </details>        
+         
+        <details>
+            <summary>Click to view FCFS Solving Steps & Examples</summary>
+            <div class="dropdown-content">
+                 
+                <div class="info-box steps">
+                    <b>Steps to Solve FCFS</b><br><br>
+                    1. Arrange processes in ascending order of Arrival Time (if given).<br>
+                    2. Draw the Gantt Chart.<br>
+                    3. Calculate Completion Time (CT) for each process.<br>
+                    4. Calculate Turnaround Time (TAT = CT - AT).<br>
+                    5. Calculate Waiting Time (WT = TAT - BT).<br>
+                    6. Calculate Average Turnaround Time and Average Waiting Time.
+                </div>
+                
+                <details>
+                    <summary>View Example 1</summary>
+                    <h4>Example 1 (Only Burst Time):</h4>
+                    <table>
+                        <tr><th>Process</th><th>Burst Time (ms)</th></tr>
+                        <tr><td>P1</td><td>24</td></tr>
+                        <tr><td>P2</td><td>3</td></tr>
+                        <tr><td>P3</td><td>3</td></tr>
+                    </table>
+                    <p>If the processes arrive in the order <b>P1, P2, P3</b>, we get the results in the <b>GANTT chart</b>:</p>
+                    <table class="gantt-table">
+                        <tr><th>P1</th><th>P2</th><th>P3</th></tr>
+                    </table>
+                    <div class="gantt-timeline"><span>0</span><span>24</span><span>27</span><span>30</span></div>
+                     
+                    <p>
+                        <b>Waiting time for P1 = 0 ms</b><br>
+                        <b>Waiting time for P2 = 24 ms</b><br>
+                        <b>Waiting time for P3 = 27 ms</b><br><br>
+                        <b>Average Waiting Time:</b> (0 + 24 + 27) / 3 = <b>17 ms</b>
+                    </p>
+                </details>
+
+                <details>
+                    <summary>View Example 2</summary>
+                    <h4>Example 2 (Order: P2, P3, P1):</h4>
+                    <table>
+                        <tr><th>Process</th><th>Burst Time (ms)</th></tr>
+                        <tr><td>P2</td><td>3</td></tr>
+                        <tr><td>P3</td><td>3</td></tr>
+                        <tr><td>P1</td><td>24</td></tr>
+                    </table>
+                    <p>GANTT Chart setup:</p>
+                    <table class="gantt-table">
+                        <tr><th>P2</th><th>P3</th><th>P1</th></tr>
+                    </table>
+                    <div class="gantt-timeline"><span>0</span><span>3</span><span>6</span><span>30</span></div>
+                     
+                    <p>
+                        <b>Waiting Time for P1 = 6 ms</b><br>
+                        <b>Waiting Time for P2 = 0 ms</b><br>
+                        <b>Waiting Time for P3 = 3 ms</b><br><br>
+                        <b>Average Waiting Time:</b> (6 + 0 + 3) / 3 = <b>3 ms</b>
+                    </p>
+
+                    <div class="info-box note-red">
+                        <b>Note (Convoy Effect):</b> If a process with the highest burst time enters before shorter ones, the small processes must wait a long time. This is shown by comparing Example 1 and Example 2.
+                    </div>
+                </details>
+
+                <details>
+                    <summary>View Example 3</summary>
+                    <h4>Example 3 (With AT, BT, and CT):</h4>
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time (ms)</th><th>Burst Time (ms)</th><th>Completion Time (ms)</th></tr>
+                        <tr><td>P1</td><td>0</td><td>3</td><td>3</td></tr>
+                        <tr><td>P2</td><td>1</td><td>2</td><td>5</td></tr>
+                        <tr><td>P3</td><td>2</td><td>1</td><td>6</td></tr>
+                        <tr><td>P4</td><td>3</td><td>4</td><td>10</td></tr>
+                        <tr><td>P5</td><td>4</td><td>5</td><td>15</td></tr>
+                        <tr><td>P6</td><td>5</td><td>2</td><td>17</td></tr>
+                    </table>
+                     
+                    <table class="gantt-table">
+                        <tr><th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P5</th><th>P6</th></tr>
+                    </table>
+                    <div class="gantt-timeline"><span>0</span><span>3</span><span>5</span><span>6</span><span>10</span><span>15</span><span>17</span></div>
+
+                    <table>
+                        <tr>
+                            <th>Process</th><th>Arrival Time</th><th>Burst Time</th><th>Completion Time</th><th>TurnAround Time</th><th>Waiting Time</th>
+                        </tr>
+                        <tr><td>P1</td><td>0</td><td>3</td><td>3</td><td>3</td><td>0</td></tr>
+                        <tr><td>P2</td><td>1</td><td>2</td><td>5</td><td>4</td><td>2</td></tr>
+                        <tr><td>P3</td><td>2</td><td>1</td><td>6</td><td>4</td><td>3</td></tr>
+                        <tr><td>P4</td><td>3</td><td>4</td><td>10</td><td>7</td><td>3</td></tr>
+                        <tr><td>P5</td><td>4</td><td>5</td><td>15</td><td>11</td><td>6</td></tr>
+                        <tr><td>P6</td><td>5</td><td>2</td><td>17</td><td>12</td><td>10</td></tr>
+                    </table>
+                    <p>
+                        <b>Average Waiting Time:</b> (0 + 2 + 3 + 3 + 6 + 10) / 6 = <b>4 ms</b><br>
+                        <b>Average Turn Around Time:</b> (3 + 4 + 4 + 7 + 11 + 12) / 6 = <b>6.83 ms</b>
+                    </p>
+                </details>
+
+                <details>
+                    <summary>View Example 4</summary>   
+                    <h4>Example 4 (Gaps in Timeline / Idle CPU):</h4>
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time (ms)</th><th>Burst Time (ms)</th></tr>
+                        <tr><td>P1</td><td>4</td><td>5</td></tr>
+                        <tr><td>P2</td><td>6</td><td>4</td></tr>
+                        <tr><td>P3</td><td>0</td><td>3</td></tr>
+                        <tr><td>P4</td><td>6</td><td>2</td></tr>
+                        <tr><td>P5</td><td>5</td><td>4</td></tr>
+                    </table>
+                     
+                    <p>Arranged order by Arrival Time: <b>P3, P1, P5, P2, P4</b></p>
+                    <table class="gantt-table">
+                        <tr><th>P3</th><th style="background:#cbd5e1; color:#475569; border: 1px solid #cbd5e1;">IDLE</th><th>P1</th><th>P5</th><th>P2</th><th>P4</th></tr>
+                    </table>
+                    <div class="gantt-timeline"><span>0</span><span>3</span><span>4</span><span>9</span><span>13</span><span>17</span><span>19</span></div>
+
+                    <div class="info-box note-red">
+                        <b>Note:</b> P3 runs from 0-3ms. The CPU goes completely idle from 3 to 4ms because no process has arrived yet! P1 arrives at 4ms to take over.
+                    </div>
+
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time</th><th>Burst Time</th><th>Completion Time</th><th>Turn Around Time</th><th>Waiting Time</th></tr>
+                        <tr><td>P1</td><td>4</td><td>5</td><td>9</td><td>5</td><td>0</td></tr>
+                        <tr><td>P2</td><td>6</td><td>4</td><td>17</td><td>11</td><td>7</td></tr>
+                        <tr><td>P3</td><td>0</td><td>3</td><td>3</td><td>3</td><td>0</td></tr>
+                        <tr><td>P4</td><td>6</td><td>2</td><td>19</td><td>13</td><td>11</td></tr>
+                        <tr><td>P5</td><td>5</td><td>4</td><td>13</td><td>8</td><td>4</td></tr>
+                    </table>
+                    <p>
+                        <b>Average Waiting Time:</b> (0 + 7 + 0 + 11 + 4) / 5 = <b>4.4 ms</b><br>
+                        <b>Average Turn Around Time:</b> (3 + 5 + 8 + 11 + 13) / 5 = <b>8 ms</b>
+                    </p>
+                </details>
+
+                <h4>Practice Questions (Try solving these!):</h4>
+                <p><b>Example 5 :</b> There are 5 processes, P1 ... P5 with Arrival Time 2, 0, 2, 3, 4 and Burst Time 2, 1, 3, 4 respectively. Find Avg Wt and Avg Tat.</p>
+                <p><b>Example 6 : </b> There are 5 processes, P1 ... P5 with Arrival Time 0, 1, 2, 3, 4 and Burst Time 2, 6, 4, 9, 12 respectively. Find Avg Wt and Avg Tat.</p>
+            </div>
+        </details>
+    </div>
+
+    <div class="card">
+        <h3>Shortest Job First (SJF)</h3>
+        <details>
+            <summary>Click to view SJF</summary>
+            <div class="dropdown-content">
+                <p>
+                    <b>Can be Preemptive or Non-Preemptive.</b><br><br>
+                    The process with the <b>smaller burst time</b> is selected for execution next. The <b>main goal of SJF is to reduce average Waiting Time.</b> An appropriate term for this scheduling algorithm is Shortest-Next CPU Burst Algorithm.<br><br>
+                    <b>Note: If the CPU burst time of two processes is the same, FCFS is used to break the tie.</b>
+                </p>
+                <br>
+                <b style="color: var(--success);">ADVANTAGES:</b> Minimum Waiting Time, Better Turnaround Time.<br>
+                <b style="color: var(--danger);">DISADVANTAGES:</b> Starvation can occur, Burst Time must be known beforehand.
+            </div>
+        </details>
+
+        <details>
+            <summary>Click to view SJF Solving Steps & Examples</summary>
+            <div class="dropdown-content">
+                <div class="info-box steps">
+                    <b>Steps to Solve SJF</b><br><br>
+                    1. Check all processes that have arrived in the ready queue (assume 0ms if AT is missing).<br>
+                    2. Select the process with the shortest burst time.<br>
+                    3. Execute it completely (if Non-Preemptive).<br>
+                    4. Repeat until all processes are complete.
+                </div>
+
+                <details>
+                    <summary>View Example 1</summary>
+                    <h4>Example 1 (Non-Preemptive - No AT given):</h4>
+                    <div class="info-box note-red">Assume all processes arrive at 0ms.</div>
+                    <table>
+                        <tr><th>Process</th><th>Burst Time</th></tr>
+                        <tr><td>P1</td><td>6</td></tr>
+                        <tr><td>P2</td><td>8</td></tr>
+                        <tr><td>P3</td><td>7</td></tr>
+                        <tr><td>P4</td><td>3</td></tr>
+                    </table>
+
+                    <table class="gantt-table">
+                        <tr><th>P4</th><th>P1</th><th>P3</th><th>P2</th></tr>
+                    </table>
+                    <div class="gantt-timeline"><span>0</span><span>3</span><span>9</span><span>16</span><span>24</span></div>
+
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time</th><th>Burst Time</th><th>Completion Time</th><th>TurnAround Time</th><th>Waiting Time</th></tr>
+                        <tr><td>P1</td><td>0</td><td>6</td><td>9</td><td>9</td><td>3</td></tr>
+                        <tr><td>P2</td><td>0</td><td>8</td><td>24</td><td>24</td><td>16</td></tr>
+                        <tr><td>P3</td><td>0</td><td>7</td><td>16</td><td>16</td><td>9</td></tr>
+                        <tr><td>P4</td><td>0</td><td>3</td><td>3</td><td>3</td><td>0</td></tr>
+                    </table>
+                    <p>
+                        <b>Average Waiting Time:</b> (3 + 16 + 9 + 0) / 4 = <b>7 ms</b><br>
+                        <b>Average TurnAround Time:</b> (9 + 24 + 16 + 3) / 4 = <b>13 ms</b>
+                    </p>
+                </details>
+
+                <details>
+                    <summary>View Example 2</summary>
+                    <h4>Example 2 (Preemptive / Shortest Remaining Time First - SRTF):</h4>
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time (AT)</th><th>Burst Time (BT)</th></tr>
+                        <tr><td>P1</td><td>0</td><td>6</td></tr>
+                        <tr><td>P2</td><td>1</td><td>4</td></tr>
+                        <tr><td>P3</td><td>2</td><td>2</td></tr>
+                        <tr><td>P4</td><td>3</td><td>3</td></tr>
+                    </table>
+
+                    <div class="info-box note-green">
+                        <b>Execution breakdown step-by-step:</b><br>
+                        * <b>At 0ms:</b> Only P1 is available. Runs for 1ms.<br>
+                        * <b>At 1ms:</b> P2 arrives. Compare P1 (remains 5ms) vs P2 (needs 4ms). P2 is shorter, switch to P2! Runs for 1ms.<br>
+                        * <b>At 2ms:</b> P3 arrives (needs 2ms). Compare remaining times. P3 is shortest. Run P3 completely to 4ms.<br>
+                        * <b>At 4ms:</b> P3 completes. Ready processes are P1(5), P2(3), P4(3). Tie between P2 and P4. Run P2 first (arrived earlier).
+                    </div>
+
+                    <table class="gantt-table">
+                        <tr><th>P1</th><th>P2</th><th>P3</th><th>P2</th><th>P4</th><th>P1</th></tr>
+                    </table>
+                    <div class="gantt-timeline"><span>0</span><span>1</span><span>2</span><span>4</span><span>7</span><span>10</span><span>15</span></div>
+
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time</th><th>Burst Time</th><th>Completion Time</th><th>TurnAround Time</th><th>Waiting Time</th></tr>
+                        <tr><td>P1</td><td>0</td><td>6</td><td>15</td><td>15</td><td>9</td></tr>
+                        <tr><td>P2</td><td>1</td><td>4</td><td>7</td><td>6</td><td>2</td></tr>
+                        <tr><td>P3</td><td>2</td><td>2</td><td>4</td><td>2</td><td>0</td></tr>
+                        <tr><td>P4</td><td>3</td><td>3</td><td>10</td><td>7</td><td>4</td></tr>
+                    </table>
+                    <p>
+                        <b>Average Waiting Time:</b> (9 + 2 + 0 + 4) / 4  = <b>3.75 ms</b><br>
+                        <b>Average Turn Around Time:</b> (15 + 6 + 2 + 7) / 4 = <b>7.5 ms</b>
+                    </p>
+                </details>
+
+                <details>
+                    <summary>View Example 3</summary>
+                    <h4>Example 3 (Preemptive / Shortest Remaining Time First - SRTF):</h4>
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time (AT)</th><th>Burst Time (BT)</th></tr>
+                        <tr><td>P1</td><td>0</td><td>12</td></tr>
+                        <tr><td>P2</td><td>2</td><td>4</td></tr>
+                        <tr><td>P3</td><td>3</td><td>6</td></tr>
+                        <tr><td>P4</td><td>8</td><td>5</td></tr>
+                    </table>
+
+                    <div class="info-box note-green">
+                        <b>Execution breakdown step-by-step:</b><br>
+                        * <b>At 0ms:</b> Only P1 is available. Runs for 1ms.<br>
+                        * <b>At 2ms:</b> P2 arrives. Compare P1 (remains 10ms) vs P2 (needs 4ms). P2 is shorter, switch to P2! Runs for 1ms.<br>
+                        * <b>At 3ms:</b> P3 arrives (needs 6ms). Compare remaining times. P2 is shortest. Run P2 completely to 6ms.<br>
+                        * <b>At 6ms:</b> P2 completes. Ready processes are P1(10), P3(6). P3 is shortest. Run P3 untill 8ms.<br>
+                        * <b>At 8ms:</b> P4 arrives. Ready processes are P1(10), P3(4), P4(5). P3 is shortest. Run P3 completely untill 12ms.<br>
+                        * <b>At 12ms:</b> Only two process are available. P1(10), P4(5). P4 is shortest. Run P4 completely untill 17ms.<br>
+                        * <b>At 17ms:</b> Only P1 is available. It gets executed completely untill 27ms.<br> 
+                    </div>
+
+                    <table class="gantt-table">
+                        <tr><th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P1</th></tr>
+                    </table>
+                    <div class="gantt-timeline"><span>0</span><span>2</span><span>6</span><span>12</span><span>17</span><span>27</span></div>
+
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time</th><th>Burst Time</th><th>Completion Time</th><th>TurnAround Time</th><th>Waiting Time</th></tr>
+                        <tr><td>P1</td><td>0</td><td>12</td><td>27</td><td>27</td><td>15</td></tr>
+                        <tr><td>P2</td><td>1</td><td>4</td><td>7</td><td>6</td><td>2</td></tr>
+                        <tr><td>P3</td><td>2</td><td>2</td><td>4</td><td>2</td><td>0</td></tr>
+                        <tr><td>P4</td><td>3</td><td>3</td><td>10</td><td>7</td><td>4</td></tr>
+                    </table>
+                    <p>
+                        <b>Average Waiting Time:</b> (9 + 2 + 0 + 4) / 4  = <b>3.75 ms</b><br>
+                        <b>Average Turn Around Time:</b> (15 + 6 + 2 + 7) / 4 = <b>7.5 ms</b>
+                    </p>
+                </details>
+                    
+                <h4>Practice Question (Try solving this!):</h4>
+                <p><b>Example 4 :</b> There are 4 processes namely P1 ... P4 with Arrival Time 0, 1, 2, 3 and Burst Time 3, 4, 9, 5. Find Avg Wt and Avg Tat.<br>
+                <b>Example 5:</b> There are 4 processes namely P1 ... P4 with Arrival Time 0, 2, 3, 8 and Burst Time 12, 4, 6, 5. Find Avg Wt and Avg Tat.</p>
+            </div>
+        </details>
+    </div>
+
+    <div class="card">
+        <h3>Priority Scheduling</h3>
+        <details>
+            <summary>Click to view Priority Scheduling</summary>
+            <div class="dropdown-content">
+                <p>
+                    <b>Can be Preemptive or Non-Preemptive.</b><br><br>
+                    A preemptive priority scheduling algorithm will preempt the CPU if the priority of a newly arrived process is higher than the current running process. Non-preemptive will simply put it at the head of the ready queue.
+                </p>
+                <br>
+                <b style="color: var(--success);">ADVANTAGES:</b> Important processes get processed immediately, supports multi-tier tasks.<br>
+                <b style="color: var(--danger);">DISADVANTAGES:</b> Starvation (Indefinite blocking of low-priority tasks).
+                <div class="info-box note-green" style="margin-top:20px;">
+                    <b>Solution to Starvation: Aging.</b> Gradually increasing the priority of processes that wait in the system for a very long time.
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>Click to view Priority Solving Steps & Examples</summary>
+            <div class="dropdown-content">
+                <div class="info-box steps">
+                    <b>Rule:</b> If not stated otherwise, lower priority number = higher actual priority choice.<br><br>
+                    <b>Steps to Solve Priority Scheduling (Non-Preemption)</b><br>
+                    1. Create Table with given data.<br>
+                    2. Identify the Priority Rule from question (Smaller number = Higher Priority or Larger number = Least Priority) {If not mentioned, consider smaller number = higher priority}.<br>
+                    3. At Time 0ms, Select process that has highest priority.<br>
+                    4. Since it is Non-Preemption, no interruption is allowed.<br>
+                    5. Draw Gantt Chart.<br>
+                    6. Calculate CT, TAT, WT, AVG TAT, AVG WT.<br><br>
+                    <b>Steps to Solve Priority Scheduling (Preemption)</b><br>
+                    1. Create Table with given data.<br>
+                    2. Identify the Priority Rule from question {If not mentioned, consider smaller number = higher priority}.<br>
+                    3. At Time 0ms, Select process that has highest priority.<br>
+                    4. Since it is Preemption, Check every new arrival.<br>
+                    5. Decide whether to preempt that process or not.<br>
+                    6. Draw Gantt Chart.<br>
+                    7. Calculate CT, TAT, WT, AVG TAT, AVG WT.
+                </div>
+                
+                <details>
+                     <summary>View Example 1</summary>
+                    <h4>Example 1 (Non-Preemptive, All arriving at 0ms):</h4>
+                    <table>
+                        <tr><th>Process</th><th>Burst Time</th><th>Priority</th></tr>
+                        <tr><td>P1</td><td>10</td><td>3</td></tr>
+                        <tr><td>P2</td><td>1</td><td>1</td></tr>
+                        <tr><td>P3</td><td>2</td><td>4</td></tr>
+                        <tr><td>P4</td><td>1</td><td>5</td></tr>
+                        <tr><td>P5</td><td>5</td><td>2</td></tr>
+                    </table>
+
+                    <table class="gantt-table">
+                        <tr><th>P2</th><th>P5</th><th>P1</th><th>P3</th><th>P4</th></tr>
+                    </table>
+                    <div class="gantt-timeline"><span>0</span><span>1</span><span>6</span><span>16</span><span>18</span><span>19</span></div>
+                    
+                    <p style="padding-top:10px;"><b>Average Waiting Time:</b> 12 ms | <b>Average Turnaround Time:</b> 8.2 ms</p>
+                </details> 
+
+                <details>
+                    <summary>View Example 2</summary> 
+                    <h4>Example 2 (Similar to Example 1):</h4>
+                    <table>
+                        <tr><th>Process</th><th>Burst Time</th><th>Priority</th></tr>
+                        <tr><td>P1</td><td>10</td><td>3</td></tr>
+                        <tr><td>P2</td><td>1</td><td>1</td></tr>
+                        <tr><td>P3</td><td>2</td><td>4</td></tr>
+                        <tr><td>P4</td><td>1</td><td>5</td></tr>
+                        <tr><td>P5</td><td>5</td><td>2</td></tr>
+                    </table>
+                    <p>
+                        <b>Average Waiting Time: 10ms</b><br>
+                        <b>Average Turn Around Time: 8.5ms</b>
+                    </p>
+                </details>
+                
+                <details>
+                    <summary>View Example 3</summary>
+                    <h4>Example 3 (With AT, BT, Priority):</h4>
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time(ms)</th><th>Burst Time(ms)</th><th>Priority</th></tr>
+                        <tr><td>P1</td><td>0</td><td>8</td><td>3</td></tr>
+                        <tr><td>P2</td><td>1</td><td>2</td><td>4</td></tr>
+                        <tr><td>P3</td><td>3</td><td>4</td><td>4</td></tr>
+                        <tr><td>P4</td><td>4</td><td>1</td><td>5</td></tr>
+                        <tr><td>P5</td><td>5</td><td>6</td><td>2</td></tr>
+                        <tr><td>P6</td><td>6</td><td>5</td><td>6</td></tr>
+                        <tr><td>P7</td><td>10</td><td>1</td><td>1</td></tr>
+                    </table>
+                    <div class="info-box note-green">
+                        <b>Execution breakdown step-by-step:</b><br>
+                        * <b>At 0ms:</b> only P1 process is available. (RT of P1 = 7ms.)<br>
+                        * <b>At 1ms:</b> only P1 process is available. (RT of P1 = 6ms.) {P2 is also available but it is not considered as it has higher number than P1}<br>
+                        * <b>At 2ms:</b> only P1 process is available. (RT of P1 = 5ms.)<br>
+                        * <b>At 3ms:</b> only P1 process is available. (RT of P1 = 4ms.) {P3 is also available but it is not considered as it has higher number than P1}<br>
+                        * <b>At 4ms:</b> only P1 process is available. (RT of P1 = 3ms.) {P4 is also available but it is not considered as it has higher number than P1}<br>
+                        * <b>At 5ms:</b> both P1, P5 process is available. Since P5 has higher priority than P1 it enters. Hence P1 is preempted (RT of P5 = 5ms.)<br>
+                        * <b>At 6ms:</b> only P5 process is available. (RT of P5 = 4ms.)<br>
+                        * <b>At 10ms:</b> both P5, P7 are available. Since P7 has higher priority than P5 it enters. Hence P5 is preempted (Process P7 completes its execution completely at time 11ms.)<br>
+                        * <b>At 11ms:</b> as only P5 is present it resumes its execution. (Process P5 completes its execution completely at time 12ms.)<br>
+                        * <b>At 12ms:</b> except P5, P7 all process are available. Out of them all P1 has more priority, so P1 starts executing (Remaining Time of P1 = 3ms.) It executes its remaining time. P1 completes its execution at 15ms.<br>
+                        * <b>At 15ms:</b> out of P2, P3, P4, P6. Both P2 and P3 have same priority (Tie - Break => Hence use FCFS Rule). P2 completes its execution. (Remaining Time of P2 = 2ms.) It executes its remaining time. P2 completes its execution at 17ms.<br>
+                        * <b>At 17ms:</b> out of P3, P4, P6. P3 has more priority, so P3 starts executing (Remaining Time of P3 = 4ms.) It executes its remaining time. P3 completes its execution at 21ms.<br>
+                        * <b>At 21ms:</b> out of P4 and P6. P4 has more priority, so P4 starts executing (Remaining Time of P4 = 1ms) It executes its remaining time. P4 completes its execution at 22ms.<br>
+                        * <b>At 22ms:</b> P6 is only left it starts executing. (Remaining Time of P6 = 5ms) P6 completes its execution at 27ms.
+                    </div>
+
+                    <table class="gantt-table">
+                        <tr><th>P1</th><th>P5</th><th>P7</th><th>P5</th><th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P6</th></tr>
+                    </table>
+                    <div class="gantt-timeline"><span>0</span><span>5</span><span>10</span><span>11</span><span>12</span><span>15</span><span>17</span><span>21</span><span>22</span><span>27</span></div>
+
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time(AT)</th><th>Burst Time(BT)</th><th>Priority</th><th>Completion Time(CT)</th><th>TurnAround Time(TAT)</th><th>Waiting Time(WT)</th></tr>
+                        <tr><td>P1</td><td>0</td><td>8</td><td>3</td><td>15</td><td>15</td><td>7</td></tr>
+                        <tr><td>P2</td><td>1</td><td>2</td><td>4</td><td>17</td><td>16</td><td>14</td></tr>
+                        <tr><td>P3</td><td>3</td><td>4</td><td>4</td><td>21</td><td>18</td><td>14</td></tr>
+                        <tr><td>P4</td><td>4</td><td>1</td><td>5</td><td>22</td><td>18</td><td>17</td></tr>
+                        <tr><td>P5</td><td>5</td><td>6</td><td>2</td><td>12</td><td>7</td><td>1</td></tr>
+                        <tr><td>P6</td><td>6</td><td>5</td><td>6</td><td>27</td><td>21</td><td>16</td></tr>
+                        <tr><td>P7</td><td>10</td><td>1</td><td>1</td><td>11</td><td>1</td><td>0</td></tr>
+                    </table>
+                    <p>
+                        <b>Average Turn Around Time:</b> (15 + 16 + 18 + 18 + 7 + 21 + 1) / 7 = <b>13.71ms</b><br>
+                        <b>Average Waiting Time:</b> (7 + 14 + 14 + 17 + 1 + 16 + 0) / 7 = <b>9.86ms</b>
+                    </p>
+                </details>
+
+                <h4>Practice Question (Try solving this!):</h4>
+                <p><b>Example 4:</b> There are 5 processes, P1 ... P5 with Arrival Time 0, 5, 12, 2, 9; Burst Time 11, 28, 2, 10, 16 and Priority 2, 0, 3, 1, 4. Find Avg Wt and Avg Tat.</p>
+            </div>
+        </details>
+    </div>
+
+    <div class="card">
+        <h3>Round Robin Scheduling Algorithm</h3>
+        <details>
+            <summary>Click to view Round Robin</summary>
+            <div class="dropdown-content">
+                <p>
+                    <b>It is purely Preemptive.</b> Designed especially for time-sharing systems.<br><br>
+                    A small unit of time called a <b>Time Quantum (TQ)</b> or time slice is defined (usually 10 to 100 ms). The ready queue is treated mathematically as a circular queue structure. The CPU scheduler goes around assigning cycles sequentially.
+                </p>
+                <br>
+                <b style="color: var(--success);">ADVANTAGES:</b> Fair allocation, zero starvation occurrences, predictable response times.<br>
+                <b style="color: var(--danger);">DISADVANTAGES:</b> High context switching overhead calculations. Performance heavily depends on picking the ideal Time Quantum size.
+            </div>
+        </details>
+
+        <details>
+            <summary>Click to view RR Solving Steps & Examples</summary>
+            <div class="dropdown-content">
+                <div class="info-box steps">
+                    <b>Steps to Solve Round Robin</b><br><br>
+                    1. Create Table and note Time Quantum (TQ).<br>
+                    2. Create Ready Queue as:<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;Time = 0ms => Ready Queue : P1<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;Processes arriving later are added to the end of the queue.<br>
+                    3. Execute for One Time Quantum.<br>
+                    4. If Burst Time (BT) = 0 it means that process is completed and remove it from queue, Else Move process to rear of queue.<br>
+                    5. Add Newly Arrived Processes:<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;While a process is running, check for new arrivals.<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;Add them to the end of the ready queue as they arrive.<br>
+                    6. Repeat, until all the process completes its execution.<br>
+                    7. Draw Gantt Chart.<br>
+                    8. Find CT, TAT, WT, Avg TAT, Avg WT.
+                </div>
+
+                <details>
+                    <summary>View Example 1</summary>
+                    <div style="padding: 10px 0;">
+                        <h4>Example 1 (Only Burst Time): Time Quantum = 4ms.</h4>
+                        <table>
+                            <tr><th>Process</th><th>Burst Time (BT)</th></tr>
+                            <tr><td>P1</td><td>24</td></tr>
+                            <tr><td>P2</td><td>3</td></tr>
+                            <tr><td>P3</td><td>3</td></tr>
+                        </table>
+
+                        <div class="info-box note-green">
+                            <b>Execution breakdown step-by-step:</b><br><br>
+                            1. Initial Ready Queue: as all process arrives at Time 0ms.
+                            <div class="queue-box">P1, P2, P3</div>
+                            <br>
+                            2. Since Time Quantum is 4ms, P1 runs for 4ms. Remaining Time for P1 is 20ms. Now Ready Queue will be:
+                            <div class="queue-box">P2, P3, P1</div>
+                            <br>
+                            3. As P2 is first in Ready Queue, it starts executing. It completes its execution at 7ms. (P2 requires only 3ms.)
+                            <div class="queue-box">P3, P1</div>
+                            Here as P2 has completed its execution it is removed from Ready Queue.<br><br>
+                            4. As P3 is first in Ready Queue, it starts executing. It completes its execution at 10ms.
+                            <div class="queue-box">P1</div>
+                            Here as P3 has completed its execution it is removed from Ready Queue.<br><br>
+                            5. P1 continues executing for 4ms. Remaining Time of P1 is 16ms. In Ready Queue only P1 is left.<br><br>
+                            6. P1 continues executing until completion sequentially since no other blocks compete.
+                        </div>
+
+                        <h2>Final Gantt Chart</h2>
+                        <table class="gantt-table">
+                            <tr><th>P1</th><th>P2</th><th>P3</th><th>P1</th><th>P1</th><th>P1</th><th>P1</th><th>P1</th></tr>
+                        </table>
+                        <div class="gantt-timeline"><span>0</span><span>4</span><span>7</span><span>10</span><span>14</span><span>18</span><span>22</span><span>26</span><span>30</span></div>
+
+                        <table>
+                            <tr><th>Process</th><th>Burst Time</th><th>Completion Time</th><th>TurnAround Time</th><th>Waiting Time</th></tr>
+                            <tr><td>P1</td><td>24</td><td>30</td><td>30</td><td>6</td></tr>
+                            <tr><td>P2</td><td>3</td><td>7</td><td>7</td><td>4</td></tr>
+                            <tr><td>P3</td><td>3</td><td>10</td><td>10</td><td>7</td></tr>
+                        </table>
+                        <p>
+                            <b>Average Waiting Time:</b> (30 + 7 + 10) / 3 = <b> 15.67 ms</b><br>
+                            <b>Average TurnAround Time:</b> (6 + 4 + 7) / 3 = <b>5.67 ms</b>
+                        </p>
+                    </div>
+                </details>
+
+                <details>
+                    <summary>View Example 2</summary>
+                    <h4>Example 2: Time Quantum = 2ms</h4>
+                    <table>
+                        <tr><th>Process</th><th>Arrival Time(AT)</th><th>Burst Time(BT)</th></tr>
+                        <tr><td>P1</td><td>0</td><td>5</td></tr>
+                        <tr><td>P2</td><td>1</td><td>3</td></tr>
+                        <tr><td>P3</td><td>2</td><td>1</td></tr>
+                        <tr><td>P4</td><td>3</td><td>2</td></tr>
+                        <tr><td>P5</td><td>4</td><td>3</td></tr>
+                    </table>
+
+                    <div class="info-box note-green">
+                        <b>Execution breakdown step-by-step:</b><br><br>
+                        1. Initial Ready Queue: 
+                        <div class="queue-box">P1</div>
+                        2. Since Time Quantum is 2ms, P1 runs for 2ms. During this Time P2, P3 arrive. Hence queue will be:
+                        <div class="queue-box">P2, P3, P1</div>
+                        3. As P2 is next in Ready Queue run it for 2ms. P4, P5 arrive. Queue becomes:
+                        <div class="queue-box">P3, P1, P4, P5, P2</div>
+                        4. Continue scheduling based on arrival cycles completely.
+                    </div>
+
+                    <h2>Final Gantt Chart</h2>
+                    <table class="gantt-table">
+                        <tr><th>P1</th><th>P2</th><th>P3</th><th>P1</th><th>P4</th><th>P5</th><th>P2</th><th>P1</th><th>P5</th></tr>
+                    </table>
+                    <div class="gantt-timeline"><span>0</span><span>2</span><span>4</span><span>5</span><span>7</span><span>9</span><span>11</span><span>12</span><span>13</span><span>14</span></div>
+
+                    <table>
+                        <tr>
+                            <th>Process</th><th>Arrival Time</th><th>Burst Time</th><th>Completion Time</th><th>TurnAround Time</th><th>Waiting Time</th>
+                        </tr>
+                        <tr><td>P1</td><td>0</td><td>5</td><td>13</td><td>13</td><td>8</td></tr>
+                        <tr><td>P2</td><td>1</td><td>3</td><td>12</td><td>11</td><td>8</td></tr>
+                        <tr><td>P3</td><td>2</td><td>1</td><td>5</td><td>3</td><td>2</td></tr>
+                        <tr><td>P4</td><td>3</td><td>2</td><td>9</td><td>6</td><td>4</td></tr>
+                        <tr><td>P5</td><td>4</td><td>3</td><td>14</td><td>10</td><td>7</td></tr>
+                    </table>
+
+                    <p>
+                        <b>Average Turn Around Time:</b> (13 + 11 + 3 + 6 + 10) / 5 = <b>8.6ms</b><br>
+                        <b>Average Waiting Time:</b> (8 + 8 + 2 + 4 + 7) / 5 = <b>5.8 ms</b>
+                    </p>
+                </details>
+
+                <h4>Practice Question (Try solving this!):</h4>
+                <p><b>Example 3:</b> There are 5 processes namely P1 ... P5 with Arrival Time 0, 5, 1, 6, 8 and Burst Time 8, 2, 7, 3, 5 and Time Quantum of 3ms. Find Avg Wt and Avg Tat.</p>
+            </div>
+        </details>
+    </div>
+
+    <div class="card">
+        <h3>MultiLevel Queue Scheduling (MLQ)</h3>
+        <details>
+            <summary>Click to view MultiLevel Queue Scheduling</summary>
+            <div class="dropdown-content">
+                <div class="info-box note-green">
+                    <b>Definition:</b><br>
+                    <b>Multilevel Queue Scheduling (MLQ) divides the ready queue into multiple separate queues based on process type, priority, or category.</b> Each queue can have its own scheduling algorithm, and processes remain permanently assigned to their respective queue.
+                </div>
+
+                <h4>Single Ready Queue</h4>
+                <div class="queue-box" style="border-style: dashed;">
+                    P1 → P2 → P3 → P4 → P5
+                </div>
+
+                <h4>Multilevel Queue Structure</h4>
+                <div class="mlq-container">
+                    <div class="mlq-row" style="background:#eff6ff; border-left:5px solid #2563eb;">
+                        <b>System Queue (Highest Priority)</b><br> P1, P2
+                    </div>
+                    <div class="mlq-row" style="background:#f0fdf4; border-left:5px solid #16a34a;">
+                        <b>Interactive Queue</b><br> P3, P4
+                    </div>
+                    <div class="mlq-row" style="background:#fff7ed; border-left:5px solid #ea580c;">
+                        <b>Batch Queue (Lowest Priority)</b><br> P5, P6
+                    </div>
+                </div>
+
+                <h4>CPU Selection Order</h4>
+                <div class="cpu-order">
+                    CPU<br> <span>▲</span><br> System Queue<br> <span>▲</span><br> Interactive Queue<br> <span>▲</span><br> Batch Queue
+                </div>
+
+                <div class="info-box steps">
+                    <b>How MLQ Works</b><br><br>
+                    1. Divide processes into multiple queues.<br>
+                    2. Assign a scheduling algorithm to each queue.<br>
+                    3. Select a queue according to queue priority.<br>
+                    4. Execute a process from that queue using its scheduling policy.<br>
+                </div>
+
+                <div class="card-container">
+                    <div class="card" style="margin-bottom:0; padding:20px;">
+                        <h3 style="color: var(--success);" >Advantages</h3>
+                        <ul style="padding-left: 20px; color: var(--text-muted); font-size: 0.9rem;">
+                            <li>Better organization of processes</li>
+                            <li>Fast response for important tasks</li>
+                            <li>Supports different scheduling policies</li>
+                            <li>Suitable for large systems</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="margin-bottom:0; padding:20px;">
+                        <h3 style="color: var(--danger);">Disadvantages</h3>
+                        <ul style="padding-left: 20px; color: var(--text-muted); font-size: 0.9rem;">
+                            <li>Starvation of lower queues</li>
+                            <li>Fixed queue assignment</li>
+                            <li>Complex implementation</li>
+                            <li>Less flexibility</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <div class="card">
+        <h3>Multilevel Feedback Queue Scheduling (MLFQ)</h3>
+        <details>
+            <summary>Click to view Multilevel Feedback Queue Scheduling</summary>
+            <div class="dropdown-content">
+                <div class="info-box note-green">
+                    <b>Definition:</b><br>
+                    <b>Multilevel Feedback Queue Scheduling</b> (MLFQ) is an advanced CPU scheduling algorithm in which the ready queue is divided into multiple queues of different priorities, and <b>processes are allowed to move between queues</b> based on their behavior and CPU usage.<br><br>
+                    Unlike Multilevel Queue Scheduling (MLQ), processes are not permanently assigned to a queue.
+                </div>
+
+                <div class="cpu-order" style="line-height: 2.5;">
+                    Queue 1 (Highest Priority)<br> <span>▼</span> (If process uses too much CPU, demote it)<br> Queue 2<br> <span>▼</span><br> Queue 3<br> <span>▲</span> (Aging can promote process back up)<br> Queue 4 (Lowest Priority)
+                </div>
+            </div>
+        </details>
+    </div>
+</section>
+
+<section id="simulator">
+    <h2>Process Simulator & Gantt Chart Builder</h2>
+    <div class="card">
+        <h3>Configure Pipeline & Properties</h3>
+        <p style="margin-bottom: 20px;">Add metrics below, select your strategic short-term scheduling algorithm, and observe computational tracking metrics in real-time.</p>
+        
+        <div class="flex-inputs">
+            <div class="form-group">
+                <label for="algo-select">Algorithm</label>
+                <select id="algo-select" onchange="toggleQuantumInput()">
+                    <option value="FCFS">First Come First Serve (FCFS)</option>
+                    <option value="SJF">Shortest Job First (Non-Preemptive)</option>
+                    <option value="SRTF">Shortest Remaining Time First (SRTF)</option>
+                    <option value="RR">Round Robin (RR)</option>
+                </select>
+            </div>
+            <div class="form-group" id="quantum-group" style="display: none;">
+                <label for="time-quantum">Time Quantum (ms)</label>
+                <input type="number" id="time-quantum" value="2" min="1">
+            </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+        <h4>Add Process Instance Tokens</h4>
+        <div class="flex-inputs">
+            <div class="form-group">
+                <label>Arrival Time (ms)</label>
+                <input type="number" id="input-at" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Burst Time (ms)</label>
+                <input type="number" id="input-bt" value="5" min="1">
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="addProcessFromInputs()">+ Insert Process</button>
+            <button class="btn-danger" onclick="clearProcessTable()">Clear Framework</button>
+        </div>
+
+        <table id="simulator-input-table">
+            <thead>
+                <tr>
+                    <th>Process Designation</th>
+                    <th>Arrival Time (AT)</th>
+                    <th>Burst Time (BT)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+
+        <div class="btn-group" style="margin-top: 30px;">
+            <button class="btn-primary" style="width: 100%; padding: 14px;" onclick="calculateSimulation()">Execute Simulation & Generate Gantt Sequence</button>
+        </div>
+    </div>
+
+    <div id="simulation-results-container" style="display: none;">
+        <div class="card">
+            <h3>Visualized Timeline Evaluation (Gantt Structure)</h3>
+            <div class="live-gantt-wrapper">
+                <div class="live-gantt" id="live-gantt-container">
+                    </div>
+            </div>
+            <div style="height: 25px;"></div> <h3>Calculated Structural Performance Matrix</h3>
+            <table id="simulator-output-table">
+                <thead>
+                    <tr>
+                        <th>Process</th>
+                        <th>Arrival Time</th>
+                        <th>Burst Time</th>
+                        <th>Completion Time (CT)</th>
+                        <th>Turnaround Time (TAT)</th>
+                        <th>Waiting Time (WT)</th>
+                        <th>Response Time (RT)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div class="info-box note-green" id="avg-metrics-display"></div>
+        </div>
+    </div>
+</section>
+
+<section id="mistakes" class="hidden">
+    <h2>Common Structural Mistakes to Avoid</h2>
+    <div class="card-container">
+        <div class="card">
+            <h3 style="color: var(--danger);">1. Context Switching & Gaps</h3>
+            <p>Forgetting to account for <b>CPU Idle Time</b> when no process has arrived yet. If your completion time ends at 3ms but the next task arrives at 5ms, map an explicit <b>IDLE</b> block from 3ms to 5ms on the Gantt chart timeline.</p>
+        </div>
+        <div class="card">
+            <h3 style="color: var(--danger);">2. Incorrect Waiting Time (WT)</h3>
+            <p>Blindly calculating WT = CT - BT. This shortcut <i>only</i> yields valid answers if Arrival Time (AT) is zero. Always use the uniform rule: <br><b>WT = TAT - BT</b></p>
+        </div>
+        <div class="card">
+            <h3 style="color: var(--danger);">3. Queue Mismanagement (Round Robin)</h3>
+            <p>Failing to correctly order newly arriving entries behind preempted returns. When a process finishes its quantum chunk, you must <b>first add any brand new tasks</b> landing at that timestamp to the rear queue before appending the interrupted slice block.</p>
+        </div>
+    </div>
+</section>
+
+<section id="generator" class="hidden">
+    <h2>Interactive Random Question Generator</h2>
+    <div class="card">
+        <h3>Evaluate Your Analytical Capabilities</h3>
+        <p style="margin-bottom: 20px;">Generate random system criteria templates below, draft your calculated parameters on scratch paper, and check against systemic evaluation structures directly.</p>
+        
+        <button class="btn-primary" onclick="generateRandomProblem()">Construct Dynamic Problem Set</button>
+
+        <div id="generated-problem-area" style="display: none; margin-top: 25px;">
+            <div class="info-box steps">
+                <b id="problem-prompt-title">Target Objective: Calculate FCFS Metrics</b>
+                <div id="problem-table-target"></div>
+            </div>
+
+            <h4>Input Your Evaluated Solutions Below</h4>
+            <div class="flex-inputs">
+                <div class="form-group">
+                    <label>Average Turnaround Time (TAT)</label>
+                    <input type="text" id="user-avg-tat" placeholder="e.g. 8.33">
+                </div>
+                <div class="form-group">
+                    <label>Average Waiting Time (WT)</label>
+                    <input type="text" id="user-avg-wt" placeholder="e.g. 4.67">
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-secondary" onclick="verifyUserAnswers()">Verify Calculated Values</button>
+            </div>
+
+            <div id="generator-feedback" class="info-box" style="display: none;"></div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <p>&copy; 2026 CPU Scheduling Guide Portfolio. Polished Design Documentation Ecosystem.</p>
+</footer>
+
+<script>
+/* GLOBAL SIMULATOR VARIABLES */
+let processes = [
+    {id: 'P1', at: 0, bt: 6},
+    {id: 'P2', at: 1, bt: 4},
+    {id: 'P3', at: 2, bt: 2},
+    {id: 'P4', at: 3, bt: 3}
+];
+let generatedProblemData = null;
+
+window.onload = function() {
+    renderSimulatorInputTable();
+};
+
+function toggleQuantumInput() {
+    const algo = document.getElementById('algo-select').value;
+    document.getElementById('quantum-group').style.display = (algo === 'RR') ? 'block' : 'none';
+}
+
+function renderSimulatorInputTable() {
+    const tbody = document.querySelector('#simulator-input-table tbody');
+    tbody.innerHTML = '';
+    processes.forEach((p, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><b>${p.id}</b></td>
+            <td>${p.at}</td>
+            <td>${p.bt}</td>
+            <td><button class="btn-danger" style="padding: 4px 10px; font-size: 0.8rem;" onclick="deleteProcess(${index})">Remove</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function addProcessFromInputs() {
+    const at = parseInt(document.getElementById('input-at').value);
+    const bt = parseInt(document.getElementById('input-bt').value);
+    
+    if (isNaN(at) || isNaN(bt) || at < 0 || bt <= 0) {
+        alert("Please input legitimate metric numbers. (Burst time must exceed 0)");
+        return;
+    }
+    
+    const nextId = 'P' + (processes.length + 1);
+    processes.push({id: nextId, at: at, bt: bt});
+    renderSimulatorInputTable();
+}
+
+function deleteProcess(index) {
+    processes.splice(index, 1);
+    renderSimulatorInputTable();
+}
+
+function clearProcessTable() {
+    processes = [];
+    renderSimulatorInputTable();
+    document.getElementById('simulation-results-container').style.display = 'none';
+}
+
+/* CORE SCHEDULING DISPATCH CALCULATORS */
+function calculateSimulation() {
+    if (processes.length === 0) {
+        alert("Please add processes prior to executing execution cycles.");
+        return;
+    }
+
+    const algo = document.getElementById('algo-select').value;
+    const tq = parseInt(document.getElementById('time-quantum').value) || 2;
+    
+    // Deep copy input metrics
+    let jobList = processes.map(p => ({...p, remainingBt: p.bt, firstAllocated: -1}));
+    
+    let ganttTimeline = []; // Array containing {name, start, end} blocks
+    let currentTime = 0;
+    let completedCount = 0;
+    const totalJobs = jobList.length;
+
+    // Sorting parameters explicitly by arrival
+    jobList.sort((a, b) => a.at - b.at);
+
+    if (algo === 'FCFS') {
+        while (completedCount < totalJobs) {
+            let available = jobList.filter(p => p.remainingBt > 0 && p.at <= currentTime);
+            if (available.length === 0) {
+                // Find next arrival
+                let nextArrivals = jobList.filter(p => p.remainingBt > 0);
+                let nextAt = Math.min(...nextArrivals.map(p => p.at));
+                ganttTimeline.push({name: 'IDLE', start: currentTime, end: nextAt});
+                currentTime = nextAt;
+                continue;
+            }
+            let active = available[0]; // First come asset
+            active.firstAllocated = currentTime;
+            let start = currentTime;
+            currentTime += active.bt;
+            active.ct = currentTime;
+            active.remainingBt = 0;
+            ganttTimeline.push({name: active.id, start: start, end: currentTime});
+            completedCount++;
+        }
+    } 
+    else if (algo === 'SJF') { // Non preemptive shortest burst tracking
+        while (completedCount < totalJobs) {
+            let available = jobList.filter(p => p.remainingBt > 0 && p.at <= currentTime);
+            if (available.length === 0) {
+                let nextArrivals = jobList.filter(p => p.remainingBt > 0);
+                let nextAt = Math.min(...nextArrivals.map(p => p.at));
+                ganttTimeline.push({name: 'IDLE', start: currentTime, end: nextAt});
+                currentTime = nextAt;
+                continue;
+            }
+            // Sort by short burst length, tie break on original arrival order
+            available.sort((a, b) => a.bt - b.bt || a.at - b.at);
+            let active = available[0];
+            active.firstAllocated = currentTime;
+            let start = currentTime;
+            currentTime += active.bt;
+            active.ct = currentTime;
+            active.remainingBt = 0;
+            ganttTimeline.push({name: active.id, start: start, end: currentTime});
+            completedCount++;
+        }
+    }
+    else if (algo === 'SRTF') { // Preemptive SJF
+        let prevJobName = '';
+        while (completedCount < totalJobs) {
+            let available = jobList.filter(p => p.remainingBt > 0 && p.at <= currentTime);
+            if (available.length === 0) {
+                let nextArrivals = jobList.filter(p => p.remainingBt > 0);
+                let nextAt = Math.min(...nextArrivals.map(p => p.at));
+                ganttTimeline.push({name: 'IDLE', start: currentTime, end: nextAt});
+                currentTime = nextAt;
+                prevJobName = 'IDLE';
+                continue;
+            }
+            available.sort((a, b) => a.remainingBt - b.remainingBt || a.at - b.at);
+            let active = available[0];
+            
+            if (active.firstAllocated === -1) {
+                active.firstAllocated = currentTime;
+            }
+
+            // Execute frame by 1ms step
+            let start = currentTime;
+            currentTime += 1;
+            active.remainingBt -= 1;
+
+            if (ganttTimeline.length > 0 && ganttTimeline[ganttTimeline.length - 1].name === active.id) {
+                ganttTimeline[ganttTimeline.length - 1].end = currentTime;
+            } else {
+                ganttTimeline.push({name: active.id, start: start, end: currentTime});
+            }
+
+            if (active.remainingBt === 0) {
+                active.ct = currentTime;
+                completedCount++;
+            }
+        }
+    }
+    else if (algo === 'RR') {
+        let readyQueue = [];
+        let visited = new Array(totalJobs).fill(false);
+        
+        // Find initial entries
+        let findInitial = () => {
+            for(let i=0; i<totalJobs; i++) {
+                if(jobList[i].at <= currentTime && !visited[i]) {
+                    readyQueue.push(jobList[i]);
+                    visited[i] = true;
+                }
+            }
+        };
+
+        findInitial();
+        if(readyQueue.length === 0) {
+            let nextAt = Math.min(...jobList.map(p => p.at));
+            ganttTimeline.push({name: 'IDLE', start: currentTime, end: nextAt});
+            currentTime = nextAt;
+            findInitial();
+        }
+
+        while (completedCount < totalJobs) {
+            if(readyQueue.length === 0) {
+                let uncompleted = jobList.filter(p => p.remainingBt > 0);
+                if(uncompleted.length > 0) {
+                    let nextAt = Math.min(...uncompleted.map(p => p.at));
+                    ganttTimeline.push({name: 'IDLE', start: currentTime, end: nextAt});
+                    currentTime = nextAt;
+                    findInitial();
+                }
+            }
+
+            let active = readyQueue.shift();
+            if (active.firstAllocated === -1) {
+                active.firstAllocated = currentTime;
+            }
+
+            let slice = Math.min(active.remainingBt, tq);
+            let start = currentTime;
+            currentTime += slice;
+            active.remainingBt -= slice;
+
+            ganttTimeline.push({name: active.id, start: start, end: currentTime});
+
+            // Rule match: Check arrivals while current slice step was running
+            for(let i=0; i<totalJobs; i++) {
+                if(jobList[i].at <= currentTime && !visited[i] && jobList[i].remainingBt > 0) {
+                    readyQueue.push(jobList[i]);
+                    visited[i] = true;
+                }
+            }
+
+            if (active.remainingBt > 0) {
+                readyQueue.push(active);
+            } else {
+                active.ct = currentTime;
+                completedCount++;
+            }
+        }
+    }
+
+    // Build evaluations matrix
+    let summaryRowsHtml = '';
+    let sumTat = 0, sumWt = 0;
+    
+    jobList.forEach(p => {
+        p.tat = p.ct - p.at;
+        p.wt = p.tat - p.bt;
+        p.rt = p.firstAllocated - p.at;
+        
+        sumTat += p.tat;
+        sumWt += p.wt;
+
+        summaryRowsHtml += `
+            <tr>
+                <td><b>${p.id}</b></td>
+                <td>${p.at}</td>
+                <td>${p.bt}</td>
+                <td>${p.ct}</td>
+                <td>${p.tat}</td>
+                <td>${p.wt}</td>
+                <td>${p.rt}</td>
+            </tr>
+        `;
+    });
+
+    document.querySelector('#simulator-output-table tbody').innerHTML = summaryRowsHtml;
+    
+    // Set text displays
+    const avgTat = (sumTat / totalJobs).toFixed(2);
+    const avgWt = (sumWt / totalJobs).toFixed(2);
+    document.getElementById('avg-metrics-display').innerHTML = `
+        <b>Calculated Successfully:</b><br>
+        Average Turnaround Time (TAT): <b>${avgTat} ms</b> | Average Waiting Time (WT): <b>${avgWt} ms</b>
+    `;
+
+    // Render visual Gantt structural elements
+    renderVisualGantt(ganttTimeline);
+    document.getElementById('simulation-results-container').style.display = 'block';
+}
+
+function renderVisualGantt(timeline) {
+    const container = document.getElementById('live-gantt-container');
+    container.innerHTML = '';
+    
+    const totalDuration = timeline[timeline.length - 1].end;
+    
+    // Color mapping parameters
+    const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#14b8a6'];
+    
+    timeline.forEach((block, idx) => {
+        const blockWidth = ((block.end - block.start) / totalDuration) * 100;
+        const blockDiv = document.createElement('div');
+        blockDiv.className = 'gantt-block';
+        blockDiv.style.width = blockWidth + '%';
+        
+        if (block.name === 'IDLE') {
+            blockDiv.style.background = '#64748b';
+        } else {
+            // Assign color linearly matching id configuration numbers
+            const numId = parseInt(block.name.replace('P','')) || idx;
+            blockDiv.style.background = colors[numId % colors.length];
+        }
+        
+        blockDiv.innerHTML = `
+            <span>${block.name}</span>
+            <span class="time-start">${block.start}</span>
+            <span class="time-end">${block.end}</span>
+        `;
+        container.appendChild(blockDiv);
+    });
+}
+
+/* DYNAMIC RANDOM PROBLEM GENERATOR SCHEME */
+function generateRandomProblem() {
+    const algos = ['FCFS', 'SJF', 'SRTF', 'RR'];
+    const chosenAlgo = algos[Math.floor(Math.random() * algos.length)];
+    const jobSize = 3 + Math.floor(Math.random() * 2); // 3 or 4 processes
+    
+    let problemJobs = [];
+    for(let i=0; i<jobSize; i++) {
+        problemJobs.push({
+            id: 'P' + (i+1),
+            at: Math.floor(Math.random() * 4), // 0 to 3
+            bt: 2 + Math.floor(Math.random() * 8) // 2 to 9
+        });
+    }
+
+    // Solve behind interface explicitly to establish verified answer keys
+    let solvedData = solveBehindScenes(problemJobs, chosenAlgo, 2);
+    generatedProblemData = {
+        algo: chosenAlgo,
+        jobs: problemJobs,
+        correctTat: parseFloat(solvedData.avgTat),
+        correctWt: parseFloat(solvedData.avgWt)
+    };
+
+    // Render targeting problem elements
+    document.getElementById('problem-prompt-title').innerText = `Target Objective: Calculate Performance Criteria for algorithm: ${chosenAlgo} ${chosenAlgo==='RR'?'(Quantum = 2ms)':''}`;
+    
+    let tblHtml = `<table><thead><tr><th>Process Designation</th><th>Arrival Time (AT)</th><th>Burst Time (BT)</th></tr></thead><tbody>`;
+    problemJobs.forEach(j => {
+        tblHtml += `<tr><td><b>${j.id}</b></td><td>${j.at} ms</td><td>${j.bt} ms</td></tr>`;
+    });
+    tblHtml += `</tbody></table>`;
+    
+    document.getElementById('problem-table-target').innerHTML = tblHtml;
+    
+    // Reset fields
+    document.getElementById('user-avg-tat').value = '';
+    document.getElementById('user-avg-wt').value = '';
+    document.getElementById('generator-feedback').style.display = 'none';
+    document.getElementById('generated-problem-area').style.display = 'block';
+}
+
+function verifyUserAnswers() {
+    if(!generatedProblemData) return;
+
+    const userTat = parseFloat(document.getElementById('user-avg-tat').value);
+    const userWt = parseFloat(document.getElementById('user-avg-wt').value);
+
+    if(isNaN(userTat) || isNaN(userWt)) {
+        alert("Please enter numeric answers prior to requesting structural review.");
+        return;
+    }
+
+    const feedbackBox = document.getElementById('generator-feedback');
+    
+    // Check margin of error down to 0.05 tolerances
+    const tatCorrect = Math.abs(userTat - generatedProblemData.correctTat) < 0.05;
+    const wtCorrect = Math.abs(userWt - generatedProblemData.correctWt) < 0.05;
+
+    if(tatCorrect && wtCorrect) {
+        feedbackBox.className = "info-box note-green";
+        feedbackBox.innerHTML = `<b>You have answered right values.</b> ($TAT = ${generatedProblemData.correctTat}$, $WT = ${generatedProblemData.correctWt}$).`;
+    } else {
+        feedbackBox.className = "info-box note-red";
+        feedbackBox.innerHTML = `
+            <b>Calculation Mismatch Identified</b><br>
+            Review parameters again carefully :<br>
+            * Target Expected Average Turnaround Time: <b>${generatedProblemData.correctTat} ms</b><br>
+            * Target Expected Average Waiting Time: <b>${generatedProblemData.correctWt} ms</b>
+        `;
+    }
+    feedbackBox.style.display = 'block';
+}
+
+// Behind-the-scenes evaluator script to avoid code duplication leaks
+function solveBehindScenes(jobArray, algo, tq) {
+    let jobList = jobArray.map(p => ({...p, remainingBt: p.bt, firstAllocated: -1}));
+    let currentTime = 0, completedCount = 0, totalJobs = jobList.length;
+    jobList.sort((a, b) => a.at - b.at);
+
+    if (algo === 'FCFS') {
+        while (completedCount < totalJobs) {
+            let available = jobList.filter(p => p.remainingBt > 0 && p.at <= currentTime);
+            if (available.length === 0) { currentTime = Math.min(...jobList.filter(p => p.remainingBt > 0).map(p => p.at)); continue; }
+            let active = available[0];
+            currentTime += active.bt;
+            active.ct = currentTime;
+            active.remainingBt = 0;
+            completedCount++;
+        }
+    } else if (algo === 'SJF') {
+        while (completedCount < totalJobs) {
+            let available = jobList.filter(p => p.remainingBt > 0 && p.at <= currentTime);
+            if (available.length === 0) { currentTime = Math.min(...jobList.filter(p => p.remainingBt > 0).map(p => p.at)); continue; }
+            available.sort((a, b) => a.bt - b.bt || a.at - b.at);
+            let active = available[0];
+            currentTime += active.bt;
+            active.ct = currentTime;
+            active.remainingBt = 0;
+            completedCount++;
+        }
+    } else if (algo === 'SRTF') {
+        while (completedCount < totalJobs) {
+            let available = jobList.filter(p => p.remainingBt > 0 && p.at <= currentTime);
+            if (available.length === 0) { currentTime = Math.min(...jobList.filter(p => p.remainingBt > 0).map(p => p.at)); continue; }
+            available.sort((a, b) => a.remainingBt - b.remainingBt || a.at - b.at);
+            let active = available[0];
+            currentTime += 1;
+            active.remainingBt -= 1;
+            if (active.remainingBt === 0) { active.ct = currentTime; completedCount++; }
+        }
+    } else if (algo === 'RR') {
+        let readyQueue = [], visited = new Array(totalJobs).fill(false);
+        let findInitial = () => {
+            for(let i=0; i<totalJobs; i++) {
+                if(jobList[i].at <= currentTime && !visited[i]) { readyQueue.push(jobList[i]); visited[i] = true; }
+            }
+        };
+        findInitial();
+        while (completedCount < totalJobs) {
+            if(readyQueue.length === 0) {
+                let uncompleted = jobList.filter(p => p.remainingBt > 0);
+                if(uncompleted.length > 0) { currentTime = Math.min(...uncompleted.map(p => p.at)); findInitial(); }
+            }
+            let active = readyQueue.shift();
+            let slice = Math.min(active.remainingBt, tq);
+            currentTime += slice;
+            active.remainingBt -= slice;
+            for(let i=0; i<totalJobs; i++) {
+                if(jobList[i].at <= currentTime && !visited[i] && jobList[i].remainingBt > 0) { readyQueue.push(jobList[i]); visited[i] = true; }
+            }
+            if (active.remainingBt > 0) readyQueue.push(active);
+            else { active.ct = currentTime; completedCount++; }
+        }
+    }
+
+    let sumTat = 0, sumWt = 0;
+    jobList.forEach(p => {
+        let tat = p.ct - p.at;
+        let wt = tat - p.bt;
+        sumTat += tat;
+        sumWt += wt;
+    });
+    return { avgTat: (sumTat / totalJobs).toFixed(2), avgWt: (sumWt / totalJobs).toFixed(2) };
+}
+
+/* INTERSECTION OBSERVER */
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if(entry.isIntersecting){
+            entry.target.classList.add("show");
+        }
+    });
+}, { threshold: 0.1 });
+
+document.querySelectorAll(".hidden").forEach(el => {
+    observer.observe(el);
+});
+</script>
+
+</body>
+</html>
