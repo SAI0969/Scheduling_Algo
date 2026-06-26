@@ -1643,7 +1643,6 @@ function calculateSimulation() {
 
     document.querySelector('#simulator-output-table tbody').innerHTML = summaryRowsHtml;
     
-    // Set text displays
     const avgTat = (sumTat / totalJobs).toFixed(2);
     const avgWt = (sumWt / totalJobs).toFixed(2);
     document.getElementById('avg-metrics-display').innerHTML = `
@@ -1651,7 +1650,6 @@ function calculateSimulation() {
         Average Turnaround Time (TAT): <b>${avgTat} ms</b> | Average Waiting Time (WT): <b>${avgWt} ms</b>
     `;
 
-    // Render visual Gantt structural elements
     renderVisualGantt(ganttTimeline);
     document.getElementById('simulation-results-container').style.display = 'block';
 }
@@ -1712,12 +1710,12 @@ function generateRandomProblem() {
         correctWt: parseFloat(solvedData.avgWt)
     };
 
-    // Render targeting problem elements
+
     document.getElementById('problem-prompt-title').innerText = `Target Objective: Calculate Performance Criteria for algorithm: ${chosenAlgo} ${chosenAlgo==='RR'?'(Quantum = 2ms)':''}`;
     
     let tblHtml = `<table><thead><tr><th>Process Designation</th><th>Arrival Time (AT)</th><th>Burst Time (BT)</th></tr></thead><tbody>`;
     problemJobs.forEach(j => {
-        tblHtml += `<tr><td><b>${j.id}</b></td><td>${j.at} ms</td><td>${j.bt} ms</td></tr>`;
+        tblHtml += `<tr><td><b>{j.id}</b></td><td>{j.at} ms</td><td>{j.bt} ms</td></tr>`;
     });
     tblHtml += `</tbody></table>`;
     
@@ -1749,7 +1747,7 @@ function verifyUserAnswers() {
 
     if(tatCorrect && wtCorrect) {
         feedbackBox.className = "info-box note-green";
-        feedbackBox.innerHTML = `<b>You have answered right values.</b> ($TAT = ${generatedProblemData.correctTat}$, $WT = ${generatedProblemData.correctWt}$).`;
+        feedbackBox.innerHTML = `<b>You have answered right values.</b> ($TAT = {generatedProblemData.correctTat}, $WT = {generatedProblemData.correctWt}).`;
     } else {
         feedbackBox.className = "info-box note-red";
         feedbackBox.innerHTML = `
@@ -1762,7 +1760,6 @@ function verifyUserAnswers() {
     feedbackBox.style.display = 'block';
 }
 
-// Behind-the-scenes evaluator script to avoid code duplication leaks
 function solveBehindScenes(jobArray, algo, tq) {
     let jobList = jobArray.map(p => ({...p, remainingBt: p.bt, firstAllocated: -1}));
     let currentTime = 0, completedCount = 0, totalJobs = jobList.length;
@@ -1834,7 +1831,6 @@ function solveBehindScenes(jobArray, algo, tq) {
     return { avgTat: (sumTat / totalJobs).toFixed(2), avgWt: (sumWt / totalJobs).toFixed(2) };
 }
 
-/* INTERSECTION OBSERVER */
 const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
         if(entry.isIntersecting){
