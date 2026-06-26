@@ -1749,7 +1749,7 @@ function verifyUserAnswers() {
 
     if(tatCorrect && wtCorrect) {
         feedbackBox.className = "info-box note-green";
-        feedbackBox.innerHTML = `<b>You have answered right values.</b> (TAT = ${generatedProblemData.correctTat}$, WT = ${generatedProblemData.correctWt}$).`;
+        feedbackBox.innerHTML = `<b>You have answered right values.</b> (TAT = ${generatedProblemData.correctTat}, WT = ${generatedProblemData.correctWt}).`;
     } else {
         feedbackBox.className = "info-box note-red";
         feedbackBox.innerHTML = `
